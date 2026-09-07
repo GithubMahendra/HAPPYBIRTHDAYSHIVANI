@@ -7,6 +7,25 @@
     <meta name="title" content="Happy Birthday Website 2.0 | Aoudumber Bade">
     <meta name="github" content="https://github.com/Aoudumber-Bade">
     <title>Mehwish Birthday</title>
+    <!-- Critical fallback styles: guarantees the cake intro is visible even if
+         style.css is slow to load or gets blocked (e.g. in-app browsers, data-saver mode) -->
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; background: #ee9ca7; }
+        #cakeIntro {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: #ee9ca7;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        #wrapper.hidden { display: none; }
+    </style>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
@@ -348,30 +367,40 @@
 </body>
 <script>
     // ================= CAKE INTRO -> REVEAL SITE =================
+    // Kept intentionally tiny and dependency-free so it can never fail to
+    // reveal the site, even if the script below throws or jQuery/CDN assets
+    // are blocked on the visitor's network.
     var INTRO_HOLD_MS = 8500; // let the candles finish + flicker for a moment
 
     function endIntro() {
         var intro = document.getElementById('cakeIntro');
-        if (intro.classList.contains('fade-out')) return; // already ending
+        if (!intro || intro.classList.contains('fade-out')) return; // already ending
         intro.classList.add('fade-out');
         setTimeout(function () {
             intro.classList.add('gone');
-            revealSite();
+            var wrapper = document.getElementById('wrapper');
+            if (wrapper) wrapper.classList.remove('hidden');
+            if (typeof startWebsiteTimers === 'function') {
+                try {
+                    startWebsiteTimers();
+                } catch (e) {
+                    // The site is still revealed above even if this fails
+                    // (e.g. jQuery blocked) - just the letter popup won't animate.
+                }
+            }
         }, 1000); // matches the CSS fade transition
     }
 
     var introTimer = setTimeout(endIntro, INTRO_HOLD_MS);
-    document.getElementById('cakeIntro').addEventListener('click', function () {
-        clearTimeout(introTimer);
-        endIntro();
-    });
-
-    function revealSite() {
-        var wrapper = document.getElementById('wrapper');
-        wrapper.classList.remove('hidden');
-        startWebsiteTimers();
+    var cakeIntroEl = document.getElementById('cakeIntro');
+    if (cakeIntroEl) {
+        cakeIntroEl.addEventListener('click', function () {
+            clearTimeout(introTimer);
+            endIntro();
+        });
     }
-
+</script>
+<script>
     // ================= ORIGINAL WEBSITE BEHAVIOUR (now started on reveal) =================
     function startWebsiteTimers() {
         let datetxt = "27 May";
@@ -422,9 +451,12 @@
                 }, 100)
             }, 2000)
             setTimeout(function () {
-                document.querySelector("#heart__letter")?.classList.add("animationOp");
-                document.querySelector(".love__img")?.classList.add("animationOp");
-                document.querySelector("#mewmew")?.classList.add("animationOp");
+                var elHeart = document.querySelector("#heart__letter");
+                var elLoveImg = document.querySelector(".love__img");
+                var elMewmew = document.querySelector("#mewmew");
+                if (elHeart) elHeart.classList.add("animationOp");
+                if (elLoveImg) elLoveImg.classList.add("animationOp");
+                if (elMewmew) elMewmew.classList.add("animationOp");
             }, 2800)
             setTimeout(function () {
                 document.querySelectorAll(".heart").forEach((item) => {
@@ -448,9 +480,12 @@
             text__letter.textContent = "";
             currentIndexLetter = 0
             currentIndexTitle = 0
-            document.querySelector("#heart__letter")?.classList.remove("animationOp");
-            document.querySelector(".love__img")?.classList.remove("animationOp");
-            document.querySelector("#mewmew")?.classList.remove("animationOp");
+            var elHeart2 = document.querySelector("#heart__letter");
+            var elLoveImg2 = document.querySelector(".love__img");
+            var elMewmew2 = document.querySelector("#mewmew");
+            if (elHeart2) elHeart2.classList.remove("animationOp");
+            if (elLoveImg2) elLoveImg2.classList.remove("animationOp");
+            if (elMewmew2) elMewmew2.classList.remove("animationOp");
             document.querySelectorAll(".heart").forEach((item) => {
                 item.classList.remove("animation")
             })
